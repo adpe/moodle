@@ -718,6 +718,11 @@ class tool_uploadcourse_course {
         $this->restoredata = $this->get_restore_content_dir();
         if ($this->restoredata === false) {
             return false;
+        } else if ($this->do === self::DO_CREATE) {
+            // For import data from a template, it is not needed to create the 'default numsections' in advance.
+            if (!is_null($this->options['templatecourse'])) {
+                $this->data['numsections'] = 0;
+            }
         }
 
         // We can only reset courses when allowed and we are updating the course.
