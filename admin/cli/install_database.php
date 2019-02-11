@@ -31,7 +31,7 @@
 define('CLI_SCRIPT', true);
 define('CACHE_DISABLE_ALL', true);
 
-// extra execution prevention - we can not just require config.php here
+// Extra execution prevention - we can not just require config.php here.
 if (isset($_SERVER['REMOTE_ADDR'])) {
     exit(1);
 }
@@ -66,33 +66,9 @@ Example:
 require_once(__DIR__.'/../../lib/phpminimumversionlib.php');
 moodle_require_minimum_php_version();
 
-// Nothing to do if config.php does not exist
-$configfile = __DIR__.'/../../config.php';
-if (!file_exists($configfile)) {
-    fwrite(STDERR, 'config.php does not exist, can not continue'); // do not localize
-    fwrite(STDERR, "\n");
-    exit(1);
-}
+// Now get cli options.
+require_once(__DIR__.'/../../lib/clilib.php');
 
-// Include necessary libs
-require($configfile);
-
-require_once($CFG->libdir.'/clilib.php');
-require_once($CFG->libdir.'/installlib.php');
-require_once($CFG->libdir.'/adminlib.php');
-require_once($CFG->libdir.'/componentlib.class.php');
-
-// make sure no tables are installed yet
-if ($DB->get_tables() ) {
-    cli_error(get_string('clitablesexist', 'install'));
-}
-
-$CFG->early_install_lang = true;
-get_string_manager(true);
-
-raise_memory_limit(MEMORY_EXTRA);
-
-// now get cli options
 list($options, $unrecognized) = cli_get_params(
     array(
         'lang'              => 'en',
@@ -109,18 +85,41 @@ list($options, $unrecognized) = cli_get_params(
     )
 );
 
-
 if ($options['help']) {
     echo $help;
-    die;
+    exit(0);
 }
+
+// Nothing to do if config.php and database already exists.
+$configfile = __DIR__.'/../../config.php';
+if (!file_exists($configfile)) {
+    // Do not localize.
+    cli_error('config.php does not exist, can not continue');
+} else {
+    require_once($configfile);
+
+    if ($DB->get_tables()) {
+        cli_error(get_string('clitablesexist', 'install'));
+    }
+}
+
+// Include necessary libs.
+require_once($CFG->libdir.'/installlib.php');
+require_once($CFG->libdir.'/adminlib.php');
+require_once($CFG->libdir.'/componentlib.class.php');
+
+raise_memory_limit(MEMORY_EXTRA);
 
 if (!$options['agree-license']) {
-    cli_error('You have to agree to the license. --help prints out the help'); // TODO: localize
+    cli_error(get_string('climustagreelicense', 'install'));
 }
 
+$CFG->early_install_lang = true;
+get_string_manager(true);
+
 if ($options['adminpass'] === true or $options['adminpass'] === '') {
-    cli_error('You have to specify admin password. --help prints out the help'); // TODO: localize
+    $adminpass = (object) array('option' => 'adminpass', 'value' => $options['adminpass']);
+    cli_error(get_string('cliincorrectvalueerror', 'admin', $adminpass));
 }
 
 // Validate that the address provided was an e-mail address.
@@ -135,7 +134,7 @@ if (!file_exists($CFG->dirroot.'/install/lang/'.$options['lang'])) {
 }
 $CFG->lang = $options['lang'];
 
-// download required lang packs
+// Download required lang packs.
 if ($CFG->lang !== 'en') {
     make_upload_directory('lang');
     $installer = new lang_installer($CFG->lang);
@@ -150,7 +149,7 @@ if ($CFG->lang !== 'en') {
     }
 }
 
-// switch the string_manager instance to stop using install/lang/
+// Switch the string_manager instance to stop using install/lang.
 $CFG->early_install_lang = false;
 get_string_manager(true);
 
