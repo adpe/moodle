@@ -1,3 +1,15 @@
 .atto_backcolor_button .dropdown-menu {
     min-width: inherit;
 }
+
+.atto_backcolor_button .atto_menuentry {
+    padding: 0 5px 5px;
+}
+
+.editor_atto_menu .open.atto_backcolor_button ul.dropdown-menu {
+    padding-bottom: unset;
+}
+
+.editor_atto_menu .atto_backcolor_button .dropdown-menu > li > a {
+    margin: unset;
+}
